@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Razorpay Payment</title>
+  <!-- Include Razorpay SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+
+<body>
+
+  <div style="display: flex; justify-content: center; align-items: center; margin-top: 15%;" id="product">
+    <!-- Your product HTML goes here -->
+    <div id="card">
+      <img src="product_image_url" alt="Product">
+      <h2>Product Title</h2>
+      <h5>Product Price : 1000</h5>
+      <button type="button" onclick="handlePayment(1000)" id="paymentBtn">Pay</button>
+    </div>
+    <h1 id="confirm" style="text-align: center; display:none;">Thank you for making payment</h1>
+  </div>
+
+  <script>
+
+    // document.getElementById("paymentBtn").addEventListener("click", handlePayment(500))
+    function handlePayment(amount) {
+      const data = { amount: amount };
+
+      // Send payment request to your server
+      fetch('http://localhost:5000/api/payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+        .then(response => response.json())
+        .then(data => {
+          const options = {
+            "key": "rzp_test_rnNWXuduZPdqfL",
+            "amount": data.amount,
+            "currency": "INR",
+            "name": "Product 1",
+            "description": "Test Transaction",
+            "order_id": data.id,
+            "handler": function (response) {
+              fetch('http://localhost:5000/api/payment/verify', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ response: response })
+              }).then(res => {
+                document.getElementById('confirm').style.display = 'block';
+                document.getElementById('card').style.display = 'none';
+                })
+                .catch(err => {
+                  console.error(err);
+                });
+            },
+            "prefill": {
+              "name": "Gaurav Kumar",
+              "email": "gaurav.kumar@example.com",
+              "contact": "9000090000"
+            },
+            "notes": {
+              "address": "Razorpay Corporate Office"
+            },
+            "theme": {
+              "color": "#3399cc"
+            }
+          };
+          const rzp = new Razorpay(options);
+          rzp.open();
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+    }
+  </script>
+
+</body>
+
+</html>
